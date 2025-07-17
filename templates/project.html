@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.title }}{% endblock %}
+
+{% block content %}
+<article class="project">
+    <div class="container">
+        <header class="project-header">
+            <h1>{{ project.title }}</h1>
+            <div class="project-meta">
+                <time datetime="{{ project.date_started.isoformat() }}">{{ project.date_started.strftime('%B %Y') }}</time>
+                to
+                <time datetime="{{ project.date_completed.isoformat() }}">{{ project.date_completed.strftime('%B %Y') }}</time>
+            </div>
+            {% if project.tags %}
+            <!--            <div class="tags">-->
+            <!--                {% for tag in post.tags %}-->
+            <!--                <span class="tag">{{ tag }}</span>-->
+            <!--                {% endfor %}-->
+            <!--            </div>-->
+            {% endif %}
+        </header>
+
+        <div class="project-content">
+            {{ content | safe }}
+        </div>
+    </div>
+</article>
+{% endblock %}

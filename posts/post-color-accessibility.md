@@ -1,0 +1,32 @@
+---
+title: Designing Accessible Color Palettes
+description: A minimal tool to test contrast and readability in design systems
+date: 2025-01-06
+author: Demo Author
+tags:
+  - design
+  - accessibility
+  - css
+status: published
+featured: true
+---
+
+Color contrast isn't just about aesthetics — it's essential for readability, accessibility, and inclusion. According to WCAG (Web Content Accessibility Guidelines), body text should meet a minimum contrast ratio of 4.5:1.
+
+To experiment with this, I built a small browser tool that lets designers test combinations of background and text colors, using live rendering and WCAG scoring:
+
+```js
+function contrastRatio(hex1, hex2) {
+  const L1 = luminance(hex1);
+  const L2 = luminance(hex2);
+  return (Math.max(L1, L2) + 0.05) / (Math.min(L1, L2) + 0.05);
+}
+```
+
+The app provides instant feedback, flagging color pairs that fail accessibility guidelines. You can view a live version here: [Accessible Palettes](https://accessible-palette.example.com)
+
+![](/static/media/demo-palette-checker.png)
+
+As a bonus, I added features for exporting CSS variables and previewing your palette on sample UIs. It’s a lightweight way to bridge the gap between creativity and compliance.
+
+If you’re designing for the web, mobile, or even print — it's worth incorporating accessibility into your workflow from the beginning. Small choices in color can have a big impact on usability.

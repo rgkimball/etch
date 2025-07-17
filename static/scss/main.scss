@@ -1,0 +1,223 @@
+// static/scss/main.scss
+// Import Bootstrap
+//@import "../../node_modules/bootstrap/scss/bootstrap";
+
+//@import "../../node_modules/bootstrap/scss/functions";
+//@import "../../node_modules/bootstrap/scss/variables"; // Make sure variables are imported before functions that use them.
+//@import "../../node_modules/bootstrap/scss/mixins";
+//@import "../../node_modules/bootstrap/scss/bootstrap";
+
+// Site
+@import '_variables';
+
+// Components
+@import "components/navigation";
+@import "components/projects";
+@import "components/posts";
+@import 'components/markdown';
+
+// Layout
+@import "layout/grid";
+@import "layout/admin";
+
+// Reset
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: $font-primary;
+  font-size: 16px;
+  line-height: 1.6;
+  color: $color-text;
+  background-color: $color-background;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// Main content
+.content {
+  // media query for min width
+  @media screen and (min-width: 768px) {
+    margin-top: 60px; // Height of nav
+    padding: $spacing-unit * 3 0;
+  }
+
+  .container {
+    @include content-container;
+  }
+}
+
+// Typography
+@each $h in $headings {
+  #{nth($h, 1)} {
+    @extend %heading;
+    font-size: #{nth($h, 2)};
+  }
+}
+
+
+h1 {
+  font-size: 2.5rem;
+}
+
+h2 {
+  font-size: 2rem;
+}
+
+h3 {
+  font-size: 1.5rem;
+}
+
+p {
+  margin-bottom: $spacing-unit;
+}
+
+a {
+  color: $color-text;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+
+  &:hover {
+    color: $color-accent;
+  }
+}
+
+// Grid layouts
+.post-grid, .projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: $spacing-unit * 2;
+  margin: ($spacing-unit * 2) 0;
+}
+
+// Cards
+.post-card, .project-card {
+  border: 1px solid $color-border;
+  padding: $spacing-unit;
+  border-radius: 4px;
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+
+  h2, h3 {
+    margin-top: 0;
+    font-size: 1.2rem;
+  }
+
+  time {
+    display: block;
+    font-size: 0.9rem;
+    color: $color-text-light;
+    margin-bottom: $spacing-unit;
+  }
+}
+
+// Footer
+footer {
+  border-top: 1px solid $color-border;
+  color: $color-text-light;
+  font-size: 0.9rem;
+  font-family: $font-heading;
+  font-weight: 100;
+  padding: ($spacing-unit * 2) 0;
+  margin-top: ($spacing-unit * 4);
+
+  .container {
+    @include container;
+  }
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.form-group textarea {
+    resize: vertical;
+}
+
+.alert {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.alert-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.centered {
+  text-align: center;
+  display: block;
+  margin: 0 auto 1rem;
+}
+
+button[type="submit"] {
+    background-color: #007bff;
+    color: white;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+button[type="submit"]:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+ol, ul {
+  margin-bottom: 0.4em;
+
+  li {
+    margin-left: 2.5em;
+    margin-bottom: 0.4em;
+  }
+}
+
+//hr {
+//  border: 1px solid $color-border;
+//  color: transparent;
+//  height: 1px;
+//  margin: 0 auto 2em;
+//  width: 70%;
+//}
+
+hr {
+  height: 10px;
+  background-image: linear-gradient(45deg, rgba(13, 13, 13, 0), rgba(13, 13, 13, 0) 33.33%, $gray-medium 33.33%, $gray-medium 66.67%, rgba(13, 13, 13, 0) 66.67%, rgba(13, 13, 13, 0) 100%);
+  background-size: 10px 100%;
+  border: 0;
+  margin: 2em auto 3em;
+  width: 250px;
+  max-width: 100%;
+}

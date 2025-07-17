@@ -1,0 +1,20 @@
+admin:
+  password_hash: insertpasshasherhere
+  salt: generaterandomsalt!
+  session_duration: 24
+content:
+  allowed_extensions:
+  - .md
+  posts_per_page: 4
+  summary_length: 200
+paths:
+  pages: pages
+  posts: posts
+  projects: projects
+  static: static
+  templates: templates
+site:
+  author: Author
+  base_url: http://localhost:5000
+  description: A personal site built with custom Python framework
+  title: Site Title

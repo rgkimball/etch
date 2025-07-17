@@ -1,0 +1,162 @@
+// static/scss/_admin.scss
+.admin-dashboard {
+  padding-top: $spacing-unit * 2;
+
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: $spacing-unit * 2;
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .sidebar {
+    .card {
+      background: #fff;
+      border: 1px solid $color-border;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: $spacing-unit * 2;
+
+      &-header {
+        padding: $spacing-unit;
+        border-bottom: 1px solid $color-border;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 500;
+
+        .btn {
+          padding: 0.25rem 0.75rem;
+          font-size: 0.875rem;
+        }
+      }
+    }
+
+    .list-group {
+      .list-group-item {
+        padding: $spacing-unit;
+        border-bottom: 1px solid $color-border;
+        color: $color-text;
+        text-decoration: none;
+        transition: background-color 0.2s ease;
+
+        &:last-child {
+          border-bottom: none;
+        }
+
+        &:hover {
+          background-color: #f5f5f5;
+        }
+
+        &.active {
+          background-color: #f0f0f0;
+          color: $color-text;
+          border-left: 3px solid $color-accent;
+        }
+      }
+    }
+  }
+
+  .editor-panel {
+    .card {
+      background: #fff;
+      border: 1px solid $color-border;
+      border-radius: 8px;
+      overflow: hidden;
+      height: calc(100vh - 120px);
+      display: flex;
+      flex-direction: column;
+
+      &-header {
+        padding: $spacing-unit;
+        border-bottom: 1px solid $color-border;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        #current-file {
+          font-weight: 500;
+        }
+
+        .btn-group {
+          display: flex;
+          gap: 0.5rem;
+        }
+      }
+
+      &-body {
+        flex: 1;
+        overflow: hidden;
+
+        #editor-container {
+          height: 100%;
+
+          .EasyMDEContainer {
+            height: 100%;
+
+            .CodeMirror {
+              height: 100%;
+              border: none;
+              font-family: $font-mono;
+
+              .CodeMirror-scroll {
+                min-height: 100%;
+              }
+            }
+
+            .editor-toolbar {
+              border: none;
+              border-bottom: 1px solid $color-border;
+              background: #f8f8f8;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Buttons
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+
+  &-primary {
+    background-color: $color-text;
+    color: #fff;
+
+    &:hover {
+      background-color: lighten($color-text, 10%);
+    }
+  }
+
+  &-success {
+    background-color: #28a745;
+    color: #fff;
+
+    &:hover {
+      background-color: darken(#28a745, 10%);
+    }
+  }
+
+  &-danger {
+    background-color: #dc3545;
+    color: #fff;
+
+    &:hover {
+      background-color: darken(#dc3545, 10%);
+    }
+  }
+}

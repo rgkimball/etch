@@ -1,0 +1,70 @@
+//
+// @file
+//  Reusable styles.
+//
+
+%heading {
+  color: $color-text;
+  font-family: $font-heading;
+  font-style: normal;
+  font-weight: $font-weight-normal;
+  font-size: $font-size-h1;
+  text-transform: none;
+  text-decoration: none;
+  margin: ($spacing-unit * 2) 0 $spacing-unit;
+
+  // As calculated by Google Fonts
+  letter-spacing: -0.006em;
+  word-spacing: 0.011em;
+  line-height: 1.23;
+
+  a {
+    text-decoration: none;
+  }
+}
+
+%content {
+  color: $color-text;
+  font-family: $font-content;
+  font-style: normal;
+  font-weight: $font-weight-normal;
+  font-size: $font-size-base;
+  text-transform: none;
+  text-decoration: none;
+
+  // As calculated by Google Fonts
+  letter-spacing: 0em;
+  word-spacing: -0.02em;
+  line-height: 1.66;
+}
+
+%tags {
+  @include better-clearfix;
+
+  li,
+  .field-item {
+    display: inline;
+    float: left;
+    list-style: none;
+
+    a {
+      @include transition(background $speed);
+      @include transition(border-color $speed);
+      border: 1px dashed transparent;
+      border-bottom-right-radius: 5px;
+      color: $gray-dark;
+      font-size: $font-size-h6;
+      padding: 0.7em 1.5em;
+      text-decoration: none;
+
+      &:hover {
+        border-color: $gray-light;
+      }
+    }
+
+    &:not(:last-of-type) {
+      margin-right: 0.35em;
+    }
+  }
+
+}

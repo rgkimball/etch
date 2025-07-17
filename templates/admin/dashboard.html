@@ -1,0 +1,55 @@
+{# templates/admin/dashboard.html #}
+{% extends "base.html" %}
+
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">
+<script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="admin-dashboard">
+    <div class="container">
+        <div class="dashboard-grid">
+            <div class="sidebar">
+                <div class="card">
+                    <div class="card-header">
+                        Content Types
+                    </div>
+                    <div class="list-group">
+                        <a href="#" class="list-group-item" data-section="pages">Pages</a>
+                        <a href="#" class="list-group-item" data-section="posts">Posts</a>
+                        <a href="#" class="list-group-item" data-section="projects">Projects</a>
+                    </div>
+                </div>
+                <div class="card" id="content-list">
+                    <div class="card-header">
+                        Content Files
+                        <button class="btn btn-primary" id="new-content-btn">New</button>
+                    </div>
+                    <div class="list-group" id="files-list">
+                        <!-- Files will be loaded here -->
+                    </div>
+                </div>
+            </div>
+            <div class="editor-panel">
+                <div class="card">
+                    <div class="card-header">
+                        <span id="current-file">Editor</span>
+                        <div class="btn-group">
+                            <button class="btn btn-success" id="save-btn">Save</button>
+                            <button class="btn btn-danger" id="delete-btn">Delete</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="editor-container">
+                            <textarea id="markdown-editor"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Keep the existing JavaScript -->
+{% endblock %}

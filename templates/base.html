@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %}</title>
+    <link rel="alternate" type="application/rss+xml" title="RSS Feed" href="{{ url_for('rss') }}">
+
+
+    <link rel="stylesheet" href="https://unicons.iconscout.com/release-pro/v4.0.8/css/thinline.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+
+<!--    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>-->
+<!--    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>-->
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-bash.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-markdown.min.js"></script>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body>
+<nav class="main-nav">
+    <div class="container">
+        <a href="{{ url_for('index') }}" class="nav-brand">
+            Recent Posts
+        </a>
+        <div class="nav-links">
+            {# Always show Projects link #}
+            <a href="{{ url_for('projects') }}">
+                <i class="uit uit-presentation-lines-alt"></i>
+                Work
+            </a>
+
+            {# Dynamic navigation from pages #}
+            {% for item in get_navigation() %}
+            <a href="{{ url_for('page', page=item.slug) }}">
+                {% if item.icon != 'None' %}
+                {{ item.icon|safe }}
+                {% endif %}
+                {{ item.title }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</nav>
+
+<main class="content">
+    {% block content %}{% endblock %}
+</main>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block scripts %}{% endblock %}
+<footer>
+    <div class="container">
+        &copy; {{ now.year }} {{ title }}
+    </div>
+</footer>
+</body>
+</html>

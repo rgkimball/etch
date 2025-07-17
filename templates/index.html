@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="container">
+    <section class="recent-posts">
+        <h2>
+            Recent Posts
+            <a href="{{ url_for('rss') }}" class="rss-link" title="RSS Feed">
+                <i class="uit uit-rss"></i>
+            </a>
+        </h2>
+        <div id="posts-container" class="post-grid">
+            {% for post in posts %}
+            <article class="post-card">
+                <h3><a href="{{ url_for('post', slug=post.slug) }}">{{ post.metadata.title }}</a></h3>
+                <time datetime="{{ post.metadata.date.isoformat() }}">{{ post.metadata.date.strftime('%B %d, %Y') }}</time>
+                {% if post.metadata.description %}
+                    <p>{{ post.metadata.description }}</p>
+                {% elif post.summary %}
+                    <p>{{ post.summary }}</p>
+                {% endif %}
+            </article>
+            {% endfor %}
+        </div>
+        {% if n_posts > per_page %}
+        <div id="pagination" class="pagination">
+            <button id="load-more" class="load-more-btn">Load More Posts</button>
+            <div id="loading" class="loading-spinner" style="display: none;">
+                Loading...
+            </div>
+        </div>
+        {% endif %}
+    </section>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/posts.js') }}"></script>
+{% endblock %}

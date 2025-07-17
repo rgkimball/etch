@@ -1,0 +1,174 @@
+article.post {
+
+  .container {
+    @include content-container;
+
+    .post-content {
+      border-top: 1px solid #e0e0e0;
+      padding: 1em 200px 0 calc(100% - 880px);
+    }
+  }
+
+  @each $h in $headings {
+    #{nth($h, 1)} {
+      scroll-margin-top: 100px;
+    }
+  }
+
+  img {
+    margin: 0 auto;
+    display: block;
+    max-width: 100%;
+  }
+
+  blockquote {
+    border-top-left-radius: 4px;
+    border-top: 1px solid #2870bb;
+    border-left: 1px solid #2870bb;
+    font-style: italic;
+    padding: 1.5em 0 0 1.5em;
+    margin: 0 -1em;
+  }
+
+
+  table {
+    display: table;
+    min-width: 80%;
+    margin: 1.3em auto;
+    font-size: 0.85em;
+
+    tr {
+      &:hover {
+        background: rgba($gray-light2, 0.15);
+      }
+
+      td {
+        padding: 0.7em 0.6em;
+        border-bottom: 1px $gray-medium solid;
+      }
+
+      th {
+        font-weight: bold;
+        padding: 0.5em 0.8em;
+        border: $gray-medium solid;
+        border-width: 1px 0px 2px 0px;
+      }
+    }
+
+    &.left-col {
+      td:first-child {
+        font-weight: bold;
+      }
+      th:first-child {
+        font-weight: normal;
+      }
+    }
+  }
+
+}
+
+// Code blocks
+code[class*=language-],
+pre[class*="language-"] {
+  border-radius: 8px;
+  font-size: 0.9em;
+  font-style: normal;
+  margin: 2em 0;
+  overflow: auto;
+  padding: 1.5em;
+}
+
+:not(pre) > code {
+  background: #f5f5f5;
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-size: 0.9em;
+  color: #e83e8c;
+}
+
+// Math equations
+.katex-display {
+  margin: 2em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  > .katex {
+    text-align: center;
+  }
+}
+
+.katex {
+  font-size: 1.1em;
+}
+
+.katex-display {
+  background: rgba(248, 249, 250, 0.26);
+  padding: 1em;
+  border-radius: 8px;
+}
+
+.post-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.post-card:hover {
+  transform: translateY(-2px);
+}
+
+.pagination {
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.load-more-btn {
+  background: transparent;
+  color: $color-text;
+  border: 1px solid #6c6c6c;
+  border-radius: 4px;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s ease;
+}
+
+.load-more-btn:hover {
+  background: rgba(108, 108, 108, 0.18);
+}
+
+.loading-spinner {
+  display: inline-block;
+  padding: 1rem;
+  color: #666;
+}
+
+/* Optional: Add a nice loading animation */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-spinner::before {
+  content: '↻';
+  display: inline-block;
+  margin-right: 0.5rem;
+  animation: spin 1s linear infinite;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  .headerlink {
+    display: None;
+  }
+
+  &:hover .headerlink {
+    color: $color-accent;
+    display: inline;
+    font-size: 0.8em;
+    left: 0.5em;
+    position: relative;
+    text-decoration: none;
+    top: -0.15em;
+  }
+}

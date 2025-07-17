@@ -1,0 +1,58 @@
+1{% extends "base.html" %}
+
+{% block title %}Projects{% endblock %}
+
+{% block content %}
+<div class="container">
+    {% if projects %}
+    <div class="projects-grid">
+        {% for project in projects %}
+        <article class="project-card">
+            <a href="{{ url_for('project', slug=project.slug) }}" class="project-link">
+            <h2>{{ project.metadata.title }}</h2>
+            {% if project.metadata.showcase_image %}
+            <img src="{{ url_for('static', filename=project.metadata.showcase_image) }}" alt="{{ project.metadata.title }}">
+            {% endif %}
+            {% if project.metadata.description %}
+            <p>{{ project.metadata.description }}</p>
+            {% endif %}
+            <div class="project-links">
+                {% if project.metadata.live_url %}
+                <a href="{{ project.metadata.live_url }}" class="button" target="_blank" rel="noopener noreferrer">
+                    <i class="uit uit-link"></i> &nbsp;
+                    View Live
+                </a>
+                {% endif %}
+                {% if project.metadata.github_url %}
+                <br />
+                <a href="{{ project.metadata.github_url }}" class="button" target="_blank" rel="noopener noreferrer">
+                    <i class="uit uit-github-alt"></i> &nbsp;
+                    View on GitHub
+                </a>
+                {% endif %}
+            </div>
+            {% if project.metadata.technologies %}
+            <div class="tags">
+                {% for tech in project.metadata.technologies %}
+                <span class="tag">{{ tech }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+            <div class="project-meta">
+<!--                <span class="status">Status: {{ project.metadata.status }}</span>-->
+<!--                {% if project.metadata.date_started %}-->
+<!--                <span class="date">Started: {{ project.metadata.date_started.strftime('%B %Y') }}</span>-->
+<!--                {% endif %}-->
+                {% if project.metadata.date_completed %}
+                <span class="date">Completed: {{ project.metadata.date_completed.strftime('%B %Y') }}</span>
+                {% endif %}
+            </div>
+            </a>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p>No projects available yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

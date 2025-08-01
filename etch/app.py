@@ -1,3 +1,9 @@
+"""
+Flask web application for a blog/portfolio site.
+
+This module contains the main Flask application with routes for displaying
+posts, projects, pages, and admin functionality.
+"""
 from datetime import (
     datetime,
     timedelta,
@@ -11,6 +17,7 @@ import re
 import secrets
 import shutil
 import time
+from urllib.parse import urljoin
 
 from rfeed import Feed, Guid, Item
 from flask import (
@@ -23,7 +30,6 @@ from flask import (
     url_for,
     jsonify,
 )
-from urllib.parse import urljoin
 import yaml
 
 from auth import verify_admin_password
@@ -41,14 +47,14 @@ from utils import (
 # Load configuration
 config = load_config()
 app = Flask(__name__,
-           template_folder=config['paths']['templates'],
-           static_folder=config['paths']['static'])
+            template_folder=config['paths']['templates'],
+            static_folder=config['paths']['static'])
 
 app.secret_key = os.getenv('SECRET_KEY', os.urandom(24))
 
 
 def get_navigation_items():
-    """Get sorted list of pages that should appear in navigation"""
+    """Get sorted list of pages that should appear in navigation."""
     pages_dir = config['paths']['pages']
     nav_items = []
 
@@ -81,6 +87,7 @@ app.jinja_env.globals.update(
 
 
 def requires_auth(f):
+    """Decorator to require authentication for admin routes."""
     @wraps(f)
     def decorated(*args, **kwargs):
         if 'authenticated' not in session:
@@ -88,7 +95,8 @@ def requires_auth(f):
         # Check if session has expired
         if 'auth_time' in session:
             auth_time = datetime.fromisoformat(session['auth_time'])
-            if datetime.now() - auth_time > timedelta(hours=config['admin']['session_duration']):
+            session_duration = timedelta(hours=config['admin']['session_duration'])
+            if datetime.now() - auth_time > session_duration:
                 session.clear()
                 return redirect(url_for('login'))
         return f(*args, **kwargs)
@@ -97,6 +105,7 @@ def requires_auth(f):
 
 
 def get_content_items(content_type: ContentType):
+    """Get and sort content items for a given content type."""
     directory = os.path.join(config['paths'][content_type.name])
     items = []
     for filename in os.listdir(directory):
@@ -105,13 +114,15 @@ def get_content_items(content_type: ContentType):
             metadata, content = load_markdown_file(path)
             if metadata:
                 items.append((metadata, content))
-    return sorted(items, key=lambda x: getattr(x[0], content_type.sort_key, ""), reverse=content_type.reverse)
-
+    sort_key = content_type.sort_key
+    return sorted(items, key=lambda x: getattr(x[0], sort_key, ""),
+                  reverse=content_type.reverse)
 
 
 # Routes
 @app.route('/')
 def index():
+    """Display the homepage with recent posts."""
     # Get most recent posts
     posts = []
     posts_dir = config['paths']['posts']
@@ -119,11 +130,13 @@ def index():
         if filename.endswith('.md'):
             metadata, content = load_markdown_file(os.path.join(posts_dir, filename))
             if hasattr(metadata, 'date'):
+                summary_length = config['content']['summary_length']
+                summary = (content[:summary_length] + '...'
+                           if len(content) > summary_length else content)
                 posts.append({
                     'slug': filename[:-3],
                     'metadata': metadata,
-                    'summary': content[:config['content']['summary_length']] + '...'
-                    if len(content) > config['content']['summary_length'] else content
+                    'summary': summary
                 })
 
     # Sort posts by date
@@ -137,7 +150,8 @@ def index():
 
 @app.route('/api/posts')
 def get_posts():
-    page = request.args.get('page', 1, type=int)
+    """API endpoint to get paginated posts."""
+    page_num = request.args.get('page', 1, type=int)
     per_page = config['content']['posts_per_page']
 
     # Get all posts
@@ -157,8 +171,9 @@ def get_posts():
 
                 # Add summary if no description
                 if not post_data['description']:
-                    post_data['summary'] = content[:config['content']['summary_length']] + '...' \
-                        if len(content) > config['content']['summary_length'] else content
+                    summary_length = config['content']['summary_length']
+                    post_data['summary'] = (content[:summary_length] + '...'
+                                            if len(content) > summary_length else content)
 
                 posts.append(post_data)
 
@@ -168,28 +183,32 @@ def get_posts():
     # Calculate pagination
     total_posts = len(posts)
     total_pages = (total_posts + per_page - 1) // per_page
-    start = (page - 1) * per_page
+    start = (page_num - 1) * per_page
     end = start + per_page
 
     current_posts = posts[start:end]
 
     # Debug logging
-    app.logger.debug(f"Page: {page}, Total: {total_posts}, Per page: {per_page}")
-    app.logger.debug(f"Returning {len(current_posts)} posts")
+    app.logger.debug("Page: %s, Total: %s, Per page: %s",
+                     page_num, total_posts, per_page)
+    app.logger.debug("Returning %s posts", len(current_posts))
 
     return jsonify({
         'posts': current_posts,
         'pagination': {
-            'current_page': page,
+            'current_page': page_num,
             'total_pages': total_pages,
-            'has_next': page < total_pages,
-            'has_prev': page > 1
+            'has_next': page_num < total_pages,
+            'has_prev': page_num > 1
         }
     })
 
+
 @app.route('/<page>')
 def page(page):
-    metadata, content = load_markdown_file(os.path.join(config['paths']['pages'], f"{page}.md"))
+    """Display a static page."""
+    metadata, content = load_markdown_file(
+        os.path.join(config['paths']['pages'], f"{page}.md"))
     if content is None:
         return "Page not found", 404
 
@@ -199,6 +218,7 @@ def page(page):
 
 @app.route('/posts/<slug>')
 def post(slug):
+    """Display a blog post."""
     filepath = os.path.join(config['paths']['posts'], f"{slug}.md")
     metadata, content = load_markdown_file(filepath)
     if content is None:
@@ -218,8 +238,10 @@ def post(slug):
         content=content,
     )
 
+
 @app.route('/projects/<slug>')
 def project(slug):
+    """Display a project page."""
     filepath = os.path.join(config['paths']['projects'], f"{slug}.md")
     metadata, content = load_markdown_file(filepath)
     if content is None:
@@ -231,8 +253,10 @@ def project(slug):
         content=content
     )
 
+
 @app.route('/projects')
 def projects():
+    """Display the projects listing page."""
     projects_dir = config['paths']['projects']
     if not os.path.exists(projects_dir):
         return render_template('projects.html', projects=[])
@@ -241,10 +265,13 @@ def projects():
     project_files = get_content_listing(projects_dir)
 
     # Add summaries to the projects
-    for project in project_files:
-        _, content = load_markdown_file(os.path.join(projects_dir, f"{project['slug']}.md"))
-        project['summary'] = content[:config['content']['summary_length']] + '...' \
-            if content and len(content) > config['content']['summary_length'] else content
+    for project_item in project_files:
+        _, content = load_markdown_file(
+            os.path.join(projects_dir, f"{project_item['slug']}.md"))
+        summary_length = config['content']['summary_length']
+        project_item['summary'] = (content[:summary_length] + '...'
+                                   if content and len(content) > summary_length
+                                   else content)
 
     # Sort projects by date_started (newest first)
     project_files.sort(
@@ -254,15 +281,18 @@ def projects():
 
     return render_template('projects.html', projects=project_files)
 
+
 # Admin routes
 @app.route('/admin', methods=['GET'])
 @requires_auth
 def admin():
+    """Display the admin dashboard."""
     return render_template('admin/dashboard.html')
 
 
 @app.route('/admin/login', methods=['GET', 'POST'])
 def login():
+    """Handle admin login."""
     if request.method == 'POST':
         password = request.form.get('password', '')
 
@@ -284,6 +314,7 @@ def login():
 
 @app.route('/rss.xml')
 def rss():
+    """Generate RSS feed for blog posts."""
     # Get all posts
     posts = []
     posts_dir = config['paths']['posts']
@@ -299,14 +330,20 @@ def rss():
                     md.reset()
                     content = md.convert(content)
 
+                description = (getattr(metadata, 'description', '') or
+                               content[:config['content']['summary_length']])
+                author = (getattr(metadata, 'author', '') or
+                          config.get('site', {}).get('author', ''))
+
                 # Create post item
                 posts.append(Item(
                     title=metadata.title,
                     link=f"{site_url}/posts/{filename[:-3]}",
-                    description=getattr(metadata, 'description', '') or content[:config['content']['summary_length']],
-                    author=getattr(metadata, 'author', config.get('site', {}).get('author', '')),
+                    description=description,
+                    author=author,
                     guid=Guid(f"{site_url}/posts/{filename[:-3]}"),
-                    pubDate=datetime.combine(metadata.date, datetime.min.time()).replace(tzinfo=timezone.utc)
+                    pubDate=datetime.combine(metadata.date, datetime.min.time()).replace(
+                        tzinfo=timezone.utc)
                 ))
 
     # Sort posts by date
@@ -327,6 +364,7 @@ def rss():
 
 @app.route("/robots.txt")
 def robots_txt():
+    """Generate robots.txt file."""
     lines = [
         "User-agent: *",
         "Disallow: /admin/",
@@ -338,18 +376,20 @@ def robots_txt():
 
 @app.route("/sitemap.xml")
 def sitemap_xml():
+    """Generate sitemap.xml file."""
     urls = []
 
     def add_url(path, lastmod):
+        """Add a URL to the sitemap."""
         abs_url = urljoin(request.host_url, path.lstrip("/"))
-        urls.append("  <url><loc>{}</loc><lastmod>{}</lastmod></url>".format(abs_url, lastmod))
+        urls.append(f"  <url><loc>{abs_url}</loc><lastmod>{lastmod}</lastmod></url>")
 
     now = datetime.utcnow().date().isoformat()
 
     # Homepage
     add_url("/", now)
 
-    for name, ctype in CONTENT_TYPES.items():
+    for name, _ in CONTENT_TYPES.items():
         dir_path = config["paths"].get(name)
         if not dir_path or not os.path.exists(dir_path):
             continue
@@ -369,7 +409,8 @@ def sitemap_xml():
                             continue
 
             slug = fname.rsplit(".", 1)[0]
-            lastmod = datetime.fromtimestamp(os.path.getmtime(filepath), tz=timezone.utc).date().isoformat()
+            lastmod = datetime.fromtimestamp(
+                os.path.getmtime(filepath), tz=timezone.utc).date().isoformat()
             add_url(f"/{name}/{slug}", lastmod)
 
     xml = (
@@ -383,6 +424,7 @@ def sitemap_xml():
 
 @app.route('/admin/logout')
 def logout():
+    """Handle admin logout."""
     session.clear()
     return redirect(url_for('index'))
 
@@ -390,6 +432,7 @@ def logout():
 @app.route('/api/content/<content_type>', methods=['GET'])
 @requires_auth
 def list_content(content_type):
+    """List content files of a given type."""
     if content_type not in config['paths']:
         return jsonify({'error': 'Invalid content type'}), 400
 
@@ -411,6 +454,7 @@ def list_content(content_type):
 @app.route('/api/content/<content_type>/<slug>', methods=['GET'])
 @requires_auth
 def get_content(content_type, slug):
+    """Get content for editing."""
     if content_type not in config['paths']:
         return jsonify({'error': 'Invalid content type'}), 400
 
@@ -419,7 +463,7 @@ def get_content(content_type, slug):
         return jsonify({'error': 'Content not found'}), 404
 
     metadata, content = load_markdown_file(str(file_path))
-    with open(file_path, 'r') as f:
+    with open(file_path, 'r', encoding='utf-8') as f:
         raw_content = f.read()
 
     return jsonify({
@@ -433,6 +477,7 @@ def get_content(content_type, slug):
 @app.route('/api/content/<content_type>/<slug>', methods=['POST'])
 @requires_auth
 def save_content(content_type, slug):
+    """Save content to file."""
     if content_type not in config['paths']:
         return jsonify({'error': 'Invalid content type'}), 400
 
@@ -450,15 +495,16 @@ def save_content(content_type, slug):
         shutil.copy2(file_path, backup_path)
 
     try:
-        file_path.write_text(content)
+        file_path.write_text(content, encoding='utf-8')
         return jsonify({'success': True, 'slug': safe_slug})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    except (OSError, IOError, PermissionError) as e:
+        return jsonify({'error': f'Failed to save file: {str(e)}'}), 500
 
 
 @app.route('/api/content/<content_type>/<slug>', methods=['DELETE'])
 @requires_auth
 def delete_content(content_type, slug):
+    """Delete content file."""
     if content_type not in config['paths']:
         return jsonify({'error': 'Invalid content type'}), 400
 
@@ -472,13 +518,14 @@ def delete_content(content_type, slug):
         shutil.copy2(file_path, backup_path)
         file_path.unlink()
         return jsonify({'success': True})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    except (OSError, IOError, PermissionError) as e:
+        return jsonify({'error': f'Failed to delete file: {str(e)}'}), 500
 
 
 @app.route('/api/validate-content', methods=['POST'])
 @requires_auth
 def validate_content():
+    """Validate content format and structure."""
     content = request.json.get('content')
     if not content:
         return jsonify({'error': 'No content provided'}), 400
@@ -503,7 +550,9 @@ def validate_content():
 
         missing_fields = [field for field in required_fields if field not in metadata]
         if missing_fields:
-            return jsonify({'error': f'Missing required fields: {", ".join(missing_fields)}'}), 400
+            return jsonify({
+                'error': f'Missing required fields: {", ".join(missing_fields)}'
+            }), 400
 
         # Validate markdown content
         md.reset()
@@ -516,12 +565,13 @@ def validate_content():
         })
     except yaml.YAMLError as e:
         return jsonify({'error': f'Invalid YAML frontmatter: {str(e)}'}), 400
-    except Exception as e:
-        return jsonify({'error': str(e)}), 400
+    except (ValueError, TypeError, AttributeError) as e:
+        return jsonify({'error': f'Content validation error: {str(e)}'}), 400
 
 
 @app.context_processor
 def inject_now():
+    """Inject common template variables."""
     return {
         'now': datetime.utcnow(),
         'title': config['site']['title'],
@@ -531,12 +581,14 @@ def inject_now():
 
 # Error handlers
 @app.errorhandler(404)
-def page_not_found(e):
+def page_not_found(_):
+    """Handle 404 errors."""
     return render_template('errors/404.html'), 404
 
 
 @app.errorhandler(500)
-def server_error(e):
+def server_error(_):
+    """Handle 500 errors."""
     return render_template('errors/500.html'), 500
 
 

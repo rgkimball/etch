@@ -1,23 +1,29 @@
+"""
+Utility functions for content processing and site management.
+
+This module provides utilities for loading and processing Markdown files,
+managing metadata, and handling various content types including posts,
+pages, and projects.
+"""
+import os
+import re
+import shutil
 from dataclasses import dataclass
 from datetime import date, datetime
 from functools import lru_cache
-import os
 from pathlib import Path
-import shutil
 from typing import Callable, List, Optional
 
-import re
-from datetime import datetime
+import markdown
+import yaml
 from flask import abort
 from jinja2 import Environment, BaseLoader
-
-import markdown
 from markdown.extensions.codehilite import CodeHiliteExtension
-from markdown.extensions.fenced_code import FencedCodeExtension
 from markdown.extensions.toc import TocExtension
-from markdown_extensions import EnhancedMarkdownExtension
-import yaml
 
+from markdown_extensions import EnhancedMarkdownExtension
+
+# pylint: disable=too-few-public-methods,too-many-instance-attributes
 
 # Configure Markdown once
 md = markdown.Markdown(extensions=[
@@ -47,9 +53,10 @@ md = markdown.Markdown(extensions=[
 
 def load_config():
     """Load configuration from YAML file"""
-    from auth import get_config_path
+    # Import here to avoid circular imports
+    from auth import get_config_path  # pylint: disable=import-outside-toplevel
     config_path = get_config_path()
-    with open(config_path, 'r') as f:
+    with open(config_path, 'r', encoding='utf-8') as f:
         return yaml.safe_load(f)
 
 def parse_date(date_str):
@@ -57,7 +64,7 @@ def parse_date(date_str):
     if not date_str:
         return datetime.now()
 
-    if type(date_str) in [date, datetime]:
+    if isinstance(date_str, (date, datetime)):
         return date_str
 
     try:
@@ -69,15 +76,16 @@ def determine_content_type(filepath):
     """Determine content type based on file location"""
     if 'posts/' in filepath:
         return 'post'
-    elif 'projects/' in filepath:
+    if 'projects/' in filepath:
         return 'project'
-    elif 'pages/' in filepath:
+    if 'pages/' in filepath:
         return 'page'
     return 'unknown'
 
 
 @dataclass
 class ContentType:
+    """Configuration for different content types"""
     name: str
     path: str
     template: str
@@ -153,7 +161,7 @@ def process_metadata(metadata: dict, content_type: str) -> BaseMetadata:
             last_updated=parse_date(metadata.get('last_updated')),
             nav_icon=metadata.get('nav_icon'),
         )
-    elif content_type == 'post':
+    if content_type == 'post':
         return PostMetadata(
             **base_data,
             date=parse_date(metadata.get('date')),
@@ -164,7 +172,7 @@ def process_metadata(metadata: dict, content_type: str) -> BaseMetadata:
             status=metadata.get('status', 'draft'),
             featured=metadata.get('featured', False),
         )
-    elif content_type == 'project':
+    if content_type == 'project':
         return ProjectMetadata(
             **base_data,
             date_started=parse_date(metadata.get('date_started')),
@@ -180,13 +188,15 @@ def process_metadata(metadata: dict, content_type: str) -> BaseMetadata:
 
 
 def get_mtime(path):
+    """Get modification time of a file"""
     return os.path.getmtime(path)
 
 def load_markdown_file(filepath):
     """Load and parse a markdown file with YAML frontmatter"""
 
     @lru_cache(maxsize=128)
-    def _load_file(filepath, mtime):
+    def _load_file(filepath, _mtime):
+        # pylint: disable=too-many-locals
         try:
             with open(filepath, 'r', encoding='utf-8') as f:
                 content = f.read().strip()
@@ -211,7 +221,8 @@ def load_markdown_file(filepath):
                                 code_blocks[key] = match.group(0)
                                 return key
 
-                            masked_md = re.sub(r"(```.*?```|~~~.*?~~~)", mask_code_block, md_raw, flags=re.DOTALL)
+                            pattern = r"(```.*?```|~~~.*?~~~)"
+                            masked_md = re.sub(pattern, mask_code_block, md_raw, flags=re.DOTALL)
 
                             # Step 2: Render remaining Markdown with Jinja
                             context = {
@@ -229,17 +240,25 @@ def load_markdown_file(filepath):
                             html_content = md.convert(jinja_rendered)
                             return metadata, html_content
 
-                        except Exception as e:
+                        except yaml.YAMLError as e:
+                            print(f"Error parsing YAML metadata: {e}")
+                            return metadata, f"<p>Error processing content: {e}</p>"
+                        except (ValueError, TypeError) as e:
                             print(f"Error converting markdown: {e}")
                             return metadata, f"<p>Error processing content: {e}</p>"
 
+                # Handle files without frontmatter
                 md.reset()
-                return {}, md.convert(content)
+                html_content = md.convert(content)
+                return {}, html_content
+
         except FileNotFoundError:
             abort(404)
-        except Exception as e:
+            return None, None
+        except (OSError, IOError) as e:
             print(f"Error processing file {filepath}: {e}")
             abort(404)
+            return None, None
 
     # Check if file exists before trying to get mtime
     if not os.path.exists(filepath):
@@ -257,7 +276,7 @@ def safe_file_operation(file_path, operation_func):
 
         result = operation_func(file_path)
         return True, result
-    except Exception as e:
+    except (OSError, IOError) as e:
         return False, str(e)
 
 def get_content_listing(content_dir):
@@ -266,13 +285,17 @@ def get_content_listing(content_dir):
     content_path = Path(content_dir)
 
     for file in content_path.glob('*.md'):
-        metadata, _ = load_markdown_file(str(file))
-        files.append({
-            'slug': file.stem,
-            'filename': file.name,
-            'metadata': metadata or {},
-            'last_modified': file.stat().st_mtime
-        })
+        try:
+            metadata, _ = load_markdown_file(str(file))
+            files.append({
+                'slug': file.stem,
+                'filename': file.name,
+                'metadata': metadata or {},
+                'last_modified': file.stat().st_mtime
+            })
+        except (OSError, IOError) as e:
+            print(f"Error processing file {file}: {e}")
+            continue
 
     return files
 

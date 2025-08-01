@@ -1,9 +1,16 @@
+"""
+Authentication module for handling admin password management.
+
+This module provides functions for hashing, verifying, and managing
+admin passwords using Argon2 for secure password hashing.
+"""
+import os
+from pathlib import Path
+import secrets
+
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
-import secrets
 import yaml
-from pathlib import Path
-import os
 
 ph = PasswordHasher()
 
@@ -31,10 +38,10 @@ def hash_password(password: str, salt: str) -> str:
     return ph.hash(f"{password}{salt}")
 
 
-def verify_password(password: str, salt: str, hash: str) -> bool:
+def verify_password(password: str, salt: str, password_hash: str) -> bool:
     """Verify a password against a hash"""
     try:
-        return ph.verify(hash, f"{password}{salt}")
+        return ph.verify(password_hash, f"{password}{salt}")
     except VerifyMismatchError:
         return False
 
@@ -45,7 +52,7 @@ def update_admin_credentials(password: str):
     if not config_path.exists():
         raise FileNotFoundError(f"Config file not found at {config_path}")
 
-    with open(config_path, 'r') as f:
+    with open(config_path, 'r', encoding='utf-8') as f:
         config = yaml.safe_load(f)
 
     salt = generate_salt()
@@ -59,7 +66,7 @@ def update_admin_credentials(password: str):
 
     # Write to temp file first
     temp_path = config_path.with_suffix('.yaml.tmp')
-    with open(temp_path, 'w') as f:
+    with open(temp_path, 'w', encoding='utf-8') as f:
         yaml.safe_dump(config, f)
 
     # Rename temp file to actual file
@@ -72,7 +79,7 @@ def verify_admin_password(password: str) -> bool:
     if not config_path.exists():
         raise FileNotFoundError(f"Config file not found at {config_path}")
 
-    with open(config_path, 'r') as f:
+    with open(config_path, 'r', encoding='utf-8') as f:
         config = yaml.safe_load(f)
 
     if 'admin' not in config:

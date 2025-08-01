@@ -1,4 +1,14 @@
-import os
+"""
+Command-line interface for Etch.
+
+This module contains the CLI for creating a new Etch site.
+Implements one command: etch [directory] [-b]
+    directory: The name of the project directory to create
+    -b or --bare: Omit sample content (bare scaffold)
+    --help: Show this help message and exit
+    --version: Show the version and exit
+"""
+import argparse
 import shutil
 import sys
 from pathlib import Path
@@ -7,11 +17,17 @@ EXCLUDE = {"__pycache__", "cli.py", "__init__.py"}
 BARE_CONTENT_DIRS = {"pages", "posts", "projects"}
 
 def main():
-    import argparse
+    """
+    Implements CLI.
+    """
 
     parser = argparse.ArgumentParser(description="Create a new Etch site.")
     parser.add_argument("name", help="Project directory name or '.' for current directory")
-    parser.add_argument("-b", "--bare", action="store_true", help="Omit sample content (bare scaffold)")
+    parser.add_argument(
+        "-b", "--bare",
+        action="store_true",
+        help="Omit sample content (bare scaffold)"
+    )
     args = parser.parse_args()
 
     destination = Path(args.name).resolve()
@@ -20,6 +36,7 @@ def main():
         print(f"Error: Directory '{args.name}' already exists and is not empty.")
         sys.exit(1)
 
+    source = None
     try:
         source = Path(__file__).parent
     except ImportError as e:

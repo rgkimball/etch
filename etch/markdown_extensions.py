@@ -1,14 +1,28 @@
-from markdown.extensions import Extension
-from markdown.preprocessors import Preprocessor
-from markdown.treeprocessors import Treeprocessor
-from markdown.postprocessors import Postprocessor
+# pylint: disable=too-few-public-methods
+"""
+Additional Markdown extensions for Etch, adding ToC, figures, and more.
+
+This module provides custom Markdown extensions including container support,
+figure captions, and table of contents generation.
+"""
 import re
 import xml.etree.ElementTree as etree
 
+from markdown.extensions import Extension
+from markdown.preprocessors import Preprocessor
+from markdown.treeprocessors import Treeprocessor
+
+
 class ContainerPreprocessor(Preprocessor):
+    """
+    Preprocessor for handling container blocks in Markdown.
+
+    Converts :::container syntax into HTML div elements with appropriate classes.
+    """
     CONTAINER_RE = re.compile(r':::(\w+)\s*(?:\{(.*?)\})?\s*\n(.*?)\n:::\s*\n', re.DOTALL)
 
     def run(self, lines):
+        """Process lines to convert container blocks to HTML."""
         new_lines = []
         current_block = []
         in_container = False
@@ -42,8 +56,17 @@ class ContainerPreprocessor(Preprocessor):
 
         return new_lines
 
+
 class FigureCaptionProcessor(Treeprocessor):
+    """
+    Tree processor for converting images with titles to figure/figcaption elements.
+
+    Wraps img elements that have a title attribute in figure tags and converts
+    the title to a figcaption element.
+    """
+
     def run(self, root):
+        """Process the element tree to wrap images in figure elements."""
         for img in root.findall('.//img'):
             if 'title' in img.attrib:
                 # Create figure element
@@ -57,8 +80,17 @@ class FigureCaptionProcessor(Treeprocessor):
                 figcaption.text = img.attrib['title']
         return root
 
+
 class TableOfContentsProcessor(Treeprocessor):
+    """
+    Tree processor for generating table of contents from heading elements.
+
+    Finds [TOC] markers and replaces them with a nested list of links
+    to all heading elements in the document.
+    """
+
     def build_toc(self, root):
+        """Build table of contents data from heading elements."""
         toc = []
         for elem in root.findall('.//h1') + root.findall('.//h2') + root.findall('.//h3'):
             level = int(elem.tag[1])
@@ -69,6 +101,7 @@ class TableOfContentsProcessor(Treeprocessor):
         return toc
 
     def run(self, root):
+        """Process the element tree to generate table of contents."""
         # Find TOC marker by iterating through paragraphs
         toc_marker = None
         for p in root.findall('.//p'):
@@ -86,7 +119,7 @@ class TableOfContentsProcessor(Treeprocessor):
                 current_level = 0
                 stack = [toc_nav]
 
-                for level, text, id in toc:
+                for level, text, element_id in toc:
                     while level <= current_level:
                         stack.pop()
                         current_level -= 1
@@ -98,14 +131,23 @@ class TableOfContentsProcessor(Treeprocessor):
 
                     li = etree.SubElement(stack[-1], 'li')
                     a = etree.SubElement(li, 'a')
-                    a.attrib['href'] = f'#{id}'
+                    a.attrib['href'] = f'#{element_id}'
                     a.text = text
 
                 toc_marker.getparent().replace(toc_marker, toc_div)
         return root
 
+
 class EnhancedMarkdownExtension(Extension):
+    """
+    Main extension class that registers all custom processors.
+
+    This extension adds container support, figure captions, and table of
+    contents functionality to Markdown processing.
+    """
+
     def extendMarkdown(self, md):
+        """Register custom processors with the Markdown instance."""
         # Container should run before markdown parsing
         md.preprocessors.register(ContainerPreprocessor(md), 'container', 25)
         # These should run after the markdown is parsed

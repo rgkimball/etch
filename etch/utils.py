@@ -16,7 +16,7 @@ from typing import Callable, List, Optional
 
 import markdown
 import yaml
-from flask import abort
+from flask import abort, current_app
 from jinja2 import Environment, BaseLoader
 from markdown.extensions.codehilite import CodeHiliteExtension
 from markdown.extensions.toc import TocExtension
@@ -187,78 +187,82 @@ def process_metadata(metadata: dict, content_type: str) -> BaseMetadata:
     return BaseMetadata(**base_data)
 
 
+@lru_cache(maxsize=128)
+def _load_file(filepath, _mtime):
+    """Load and parse a markdown file with YAML frontmatter"""
+    # pylint: disable=too-many-locals
+    current_app.logger.info(f"Cache miss! Loading file {filepath} {_mtime}")
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            content = f.read().strip()
+
+            if content.startswith('---'):
+                parts = content.split('---', 2)
+                if len(parts) >= 3:
+                    md.reset()
+                    raw_metadata = yaml.safe_load(parts[1])
+                    content_type = determine_content_type(filepath)
+                    metadata = process_metadata(raw_metadata, content_type)
+
+                    try:
+                        md_raw = parts[2].strip()
+
+                        # Step 1: Extract and replace code blocks
+                        code_blocks = {}
+
+                        def mask_code_block(match):
+                            i = len(code_blocks)
+                            key = f"[{{CODEBLOCK_{i}}}]"
+                            code_blocks[key] = match.group(0)
+                            return key
+
+                        pattern = r"(```.*?```|~~~.*?~~~)"
+                        masked_md = re.sub(pattern, mask_code_block, md_raw, flags=re.DOTALL)
+
+                        # Step 2: Render remaining Markdown with Jinja
+                        context = {
+                            'now': datetime.now(),
+                        }
+
+                        rtemplate = Environment(loader=BaseLoader).from_string(masked_md)
+                        jinja_rendered = rtemplate.render(**context)
+
+                        # Step 3: Restore original code blocks
+                        for key, block in code_blocks.items():
+                            jinja_rendered = jinja_rendered.replace(key, block)
+
+                        # Step 4: Convert to HTML
+                        html_content = md.convert(jinja_rendered)
+                        return metadata, html_content
+
+                    except yaml.YAMLError as e:
+                        print(f"Error parsing YAML metadata: {e}")
+                        return metadata, f"<p>Error processing content: {e}</p>"
+                    except (ValueError, TypeError) as e:
+                        print(f"Error converting markdown: {e}")
+                        return metadata, f"<p>Error processing content: {e}</p>"
+
+            # Handle files without frontmatter
+            md.reset()
+            html_content = md.convert(content)
+            return {}, html_content
+
+    except FileNotFoundError:
+        abort(404)
+        return None, None
+    except (OSError, IOError) as e:
+        print(f"Error processing file {filepath}: {e}")
+        abort(404)
+        return None, None
+
+
 def get_mtime(path):
     """Get modification time of a file"""
     return os.path.getmtime(path)
 
+
 def load_markdown_file(filepath):
     """Load and parse a markdown file with YAML frontmatter"""
-
-    @lru_cache(maxsize=128)
-    def _load_file(filepath, _mtime):
-        # pylint: disable=too-many-locals
-        try:
-            with open(filepath, 'r', encoding='utf-8') as f:
-                content = f.read().strip()
-
-                if content.startswith('---'):
-                    parts = content.split('---', 2)
-                    if len(parts) >= 3:
-                        md.reset()
-                        raw_metadata = yaml.safe_load(parts[1])
-                        content_type = determine_content_type(filepath)
-                        metadata = process_metadata(raw_metadata, content_type)
-
-                        try:
-                            md_raw = parts[2].strip()
-
-                            # Step 1: Extract and replace code blocks
-                            code_blocks = {}
-
-                            def mask_code_block(match):
-                                i = len(code_blocks)
-                                key = f"[{{CODEBLOCK_{i}}}]"
-                                code_blocks[key] = match.group(0)
-                                return key
-
-                            pattern = r"(```.*?```|~~~.*?~~~)"
-                            masked_md = re.sub(pattern, mask_code_block, md_raw, flags=re.DOTALL)
-
-                            # Step 2: Render remaining Markdown with Jinja
-                            context = {
-                                'now': datetime.now(),
-                            }
-
-                            rtemplate = Environment(loader=BaseLoader).from_string(masked_md)
-                            jinja_rendered = rtemplate.render(**context)
-
-                            # Step 3: Restore original code blocks
-                            for key, block in code_blocks.items():
-                                jinja_rendered = jinja_rendered.replace(key, block)
-
-                            # Step 4: Convert to HTML
-                            html_content = md.convert(jinja_rendered)
-                            return metadata, html_content
-
-                        except yaml.YAMLError as e:
-                            print(f"Error parsing YAML metadata: {e}")
-                            return metadata, f"<p>Error processing content: {e}</p>"
-                        except (ValueError, TypeError) as e:
-                            print(f"Error converting markdown: {e}")
-                            return metadata, f"<p>Error processing content: {e}</p>"
-
-                # Handle files without frontmatter
-                md.reset()
-                html_content = md.convert(content)
-                return {}, html_content
-
-        except FileNotFoundError:
-            abort(404)
-            return None, None
-        except (OSError, IOError) as e:
-            print(f"Error processing file {filepath}: {e}")
-            abort(404)
-            return None, None
 
     # Check if file exists before trying to get mtime
     if not os.path.exists(filepath):

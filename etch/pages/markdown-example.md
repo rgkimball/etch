@@ -5,6 +5,7 @@ template: page
 last_updated: 2025-06-29
 show_in_nav: false
 nav_order: 2
+exclude_from_sitemap: true
 ---
 # Headers
 

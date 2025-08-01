@@ -1,4 +1,8 @@
-from datetime import datetime, timedelta, timezone
+from datetime import (
+    datetime,
+    timedelta,
+    timezone,
+)
 from functools import wraps
 import os
 from pathlib import Path
@@ -9,8 +13,17 @@ import shutil
 import time
 
 from rfeed import Feed, Guid, Item
-from flask import Flask, render_template, session
-from flask import request, redirect, url_for, jsonify
+from flask import (
+    Flask,
+    Response,
+    render_template,
+    session,
+    request,
+    redirect,
+    url_for,
+    jsonify,
+)
+from urllib.parse import urljoin
 import yaml
 
 from auth import verify_admin_password
@@ -310,6 +323,62 @@ def rss():
     )
 
     return feed.rss(), 200, {'Content-Type': 'application/rss+xml; charset=utf-8'}
+
+
+@app.route("/robots.txt")
+def robots_txt():
+    lines = [
+        "User-agent: *",
+        "Disallow: /admin/",
+        "Disallow: /__pullhook",
+        f"Sitemap: {request.host_url.rstrip('/')}/sitemap.xml"
+    ]
+    return Response("\n".join(lines), mimetype="text/plain")
+
+
+@app.route("/sitemap.xml")
+def sitemap_xml():
+    urls = []
+
+    def add_url(path, lastmod):
+        abs_url = urljoin(request.host_url, path.lstrip("/"))
+        urls.append("  <url><loc>{}</loc><lastmod>{}</lastmod></url>".format(abs_url, lastmod))
+
+    now = datetime.utcnow().date().isoformat()
+
+    # Homepage
+    add_url("/", now)
+
+    for name, ctype in CONTENT_TYPES.items():
+        dir_path = config["paths"].get(name)
+        if not dir_path or not os.path.exists(dir_path):
+            continue
+
+        for fname in os.listdir(dir_path):
+            if not fname.endswith(".md"):
+                continue
+
+            filepath = os.path.join(dir_path, fname)
+            with open(filepath, "r", encoding="utf-8") as f:
+                text = f.read().strip()
+                if text.startswith("---"):
+                    parts = text.split("---", 2)
+                    if len(parts) >= 3:
+                        frontmatter = yaml.safe_load(parts[1])
+                        if frontmatter.get("exclude_from_sitemap", False):
+                            continue
+
+            slug = fname.rsplit(".", 1)[0]
+            lastmod = datetime.fromtimestamp(os.path.getmtime(filepath), tz=timezone.utc).date().isoformat()
+            add_url(f"/{name}/{slug}", lastmod)
+
+    xml = (
+            '<?xml version="1.0" encoding="UTF-8"?>\n'
+            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+            + "\n".join(urls) +
+            '\n</urlset>'
+    )
+    return Response(xml, mimetype="application/xml")
 
 
 @app.route('/admin/logout')

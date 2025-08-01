@@ -5,7 +5,7 @@ article.post {
 
     .post-content {
       border-top: 1px solid #e0e0e0;
-      padding: 1em 200px 0 calc(100% - 880px);
+      padding: 1em calc(100% - 968px) 0 calc(100% - 880px);
     }
   }
 
@@ -27,7 +27,6 @@ article.post {
     border-left: 1px solid #2870bb;
     font-style: italic;
     padding: 1.5em 0 0 1.5em;
-    margin: 0 -1em;
   }
 
 

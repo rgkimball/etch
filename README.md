@@ -1,5 +1,5 @@
 <p align="center">
-<img src="/static/media/etch.svg" width="200" alt="Etch Logo - Courtesy of SocialSight AI" />
+<img src="https://rgk.io/static/media/etch.svg" width="200" alt="Etch Logo - Courtesy of SocialSight AI" />
 </p>
 
 # Etch
@@ -34,12 +34,38 @@ etch/
 ├── pages/                  # Static pages (e.g., About)
 ├── projects/               # Markdown-based project entries
 ├── static/                 # CSS, JS, images
-├── requirements.txt
 ```
 
 ---
 
-## Quickstart
+## Quickstart - from PyPI
+
+### 1. Install the package
+```bash
+pip install etch
+```
+
+### 2. Create a new project
+
+Where `new-site` is the name of your folder (or `.` if you want to create the app in your current directory):
+
+```bash
+etch new-site
+```
+
+_Optionally, add `--bare`/`-b` if you don't want the demo content!_
+
+### 3. Run the app server
+```bash
+cd new-site
+flask run  # or python app.py
+```
+
+Visit [http://localhost:5000](http://localhost:5000)
+
+---
+
+## Quickstart - from source
 
 ### 1. Clone the repo
 
@@ -68,6 +94,8 @@ python app.py
 ```
 
 Visit [http://localhost:5000](http://localhost:5000)
+
+Now make an edit, add a page or a post and your content will be live &mdash; no need to restart the app!
 
 ---
 
@@ -111,12 +139,12 @@ Edit `config.yml` to change:
 
 ---
 
-## 🔒 Admin
+## Admin
 
 `auth.py` includes login helpers, but admin routes are not enabled by default. Future versions may include editing from the browser.
 
 ---
 
-## 📌 Why Etch?
+## Why Etch?
 
-Because sometimes you don’t need a JS toolchain, Go templates, or a megabyte of YAML. You just want to write, commit, and publish in a familiar toolchain.
+Because sometimes you don’t need a JS toolchain, Go templates, or a megabyte of YAML. You just want to write, commit, and publish in a familiar language.

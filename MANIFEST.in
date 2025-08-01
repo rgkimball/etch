@@ -1,0 +1,6 @@
+include config.yml
+recursive-include templates *.html
+recursive-include static *
+recursive-include pages *.md
+recursive-include posts *.md
+recursive-include projects *.md

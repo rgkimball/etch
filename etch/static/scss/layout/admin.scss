@@ -160,3 +160,30 @@
     }
   }
 }
+
+.container.admin-shortlinks {
+
+  button.create {
+    margin-left: 0.5em;
+    background: transparent;
+    border: none;
+    color: crimson;
+    cursor: pointer;
+  }
+  button.create:hover {
+    text-decoration: underline;
+  }
+
+
+}
+
+button.icon, form > button.icon {
+  background: transparent;
+  border: 1px solid $gray-medium;
+  border-radius: 0px;
+  color: $gray-dark;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0.5rem 0.5rem;
+  margin-left: 0.5em;
+ }

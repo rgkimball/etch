@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Page Not Found{% endblock %}
+
+{% block content %}
+<div class="error-page">
+    <div class="container">
+        <div class="error-content">
+            <h1 class="error-code">404</h1>
+            <h2 class="error-title">Page Not Found</h2>
+            <p class="error-message">
+                Sorry, the page you're looking for doesn't exist. It might have been moved, deleted, or you entered the wrong URL.
+            </p>
+        </div>
+    </div>
+</div>
+
+<style>
+.error-page {
+    min-height: 60vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.error-code {
+    font-size: 6rem;
+    font-weight: bold;
+    color: #c4cbd2;
+    margin-bottom: 0;
+    line-height: 1;
+}
+
+.error-title {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: #343a40;
+}
+
+.error-message {
+    font-size: 1.1rem;
+    color: #6c757d;
+    margin-bottom: 2rem;
+    line-height: 1.5;
+}
+
+.error-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+</style>
+{% endblock %}

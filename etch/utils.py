@@ -8,6 +8,7 @@ from typing import Callable, List, Optional
 
 import re
 from datetime import datetime
+from flask import abort
 from jinja2 import Environment, BaseLoader
 
 import markdown
@@ -230,10 +231,14 @@ def load_markdown_file(filepath):
                 md.reset()
                 return {}, md.convert(content)
         except FileNotFoundError:
-            return None, None
+            abort(404)
         except Exception as e:
             print(f"Error processing file {filepath}: {e}")
-            return None, None
+            abort(404)
+
+    # Check if file exists before trying to get mtime
+    if not os.path.exists(filepath):
+        abort(404)
 
     return _load_file(filepath, os.path.getmtime(filepath))
 

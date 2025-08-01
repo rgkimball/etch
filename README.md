@@ -51,8 +51,8 @@ Where `new-site` is the name of your folder (or `.` if you want to create the ap
 
 ```bash
 etch new-site
-```_
-_
+```
+
 _Optionally, add `--bare`/`-b` if you don't want the demo content!_
 
 ### 3. Run the app server

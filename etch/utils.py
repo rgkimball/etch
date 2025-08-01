@@ -30,8 +30,13 @@ md = markdown.Markdown(extensions=[
     'markdown.extensions.attr_list',
     'markdown.extensions.def_list',
     TocExtension(permalink=True),
-    CodeHiliteExtension(css_class='highlight'),
-    FencedCodeExtension(),
+    CodeHiliteExtension(
+        css_class='highlight',
+        use_pygments=False,  # Don't use Pygments
+        guess_lang=False     # Don't guess language
+    ),
+    # CodeHiliteExtension(css_class='highlight'),
+    # FencedCodeExtension(),
     'pymdownx.arithmatex',
     EnhancedMarkdownExtension(),
 ], extension_configs={

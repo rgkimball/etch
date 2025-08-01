@@ -74,7 +74,12 @@ pre[class*="language-"] {
   font-style: normal;
   margin: 2em 0;
   overflow: auto;
+  padding: 0;
+}
+
+pre[class*="language-"] {
   padding: 1.5em;
+  box-sizing: border-box;
 }
 
 :not(pre) > code {
